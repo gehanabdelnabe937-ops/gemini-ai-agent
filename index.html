@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<!-- Gemini Live Agent v5 — Part 1/3 -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Gemini Live Agent v5</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Cairo:wght@300;400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--cyan:#00f5ff;--green:#39ff14;--purple:#bf00ff;--gold:#ffd700;--red:#ff3333;--bg:#020408;--card:rgba(0,18,36,0.92);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:#c8e6f0;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,245,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,0.04) 1px,transparent 1px);background-size:40px 40px;animation:gridMove 25s linear infinite;z-index:0;pointer-events:none;}
+@keyframes gridMove{to{background-position:40px 40px;}}
+#splash{position:fixed;inset:0;background:#020408;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .6s;}
+#splash.hide{opacity:0;pointer-events:none;}
+.splash-logo{font-family:'Orbitron',monospace;font-size:clamp(22px,6vw,52px);font-weight:900;background:linear-gradient(135deg,var(--cyan),var(--purple),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center;line-height:1.2;}
+.splash-sub{font-size:13px;color:rgba(200,230,240,.5);letter-spacing:2px;text-align:center;}
+.splash-bar{width:260px;height:3px;background:rgba(0,245,255,.1);border-radius:3px;overflow:hidden;margin-top:10px;}
+.splash-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--purple));border-radius:3px;animation:sfill 2s ease forwards;}
+@keyframes sfill{from{width:0}to{width:100%}}
+.splash-steps{display:flex;flex-direction:column;gap:6px;margin-top:8px;min-height:80px;}
+.splash-step{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(0,245,255,.5);opacity:0;transition:opacity .3s;}
+.splash-step.show{opacity:1;}
+.wrap{position:relative;z-index:1;max-width:1500px;margin:0 auto;padding:12px;}
+.header{text-align:center;padding:16px 0 10px;}
+.badge{display:inline-block;background:linear-gradient(135deg,rgba(0,245,255,.1),rgba(191,0,255,.1));border:1px solid rgba(0,245,255,.35);border-radius:30px;padding:5px 18px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--cyan);letter-spacing:2px;margin-bottom:8px;animation:pb 3s ease-in-out infinite;}
+@keyframes pb{50%{box-shadow:0 0 20px rgba(0,245,255,.4);}}
+h1{font-family:'Orbitron',monospace;font-size:clamp(18px,5vw,40px);font-weight:900;background:linear-gradient(135deg,var(--cyan),var(--purple),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px;line-height:1.2;}
+.sub{font-size:11px;color:rgba(200,230,240,.5);letter-spacing:1px;}
+.vbadge{display:inline-block;background:rgba(57,255,20,.1);border:1px solid var(--green);border-radius:20px;padding:3px 12px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--green);margin-top:5px;}
+.api-config{background:rgba(0,6,15,.95);border:1px solid rgba(255,215,0,.3);border-radius:10px;padding:12px;margin:8px 0;}
+.api-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.api-input{flex:1;min-width:150px;background:rgba(0,3,8,.9);border:1px solid rgba(255,215,0,.2);border-radius:7px;padding:8px 10px;color:var(--gold);font-family:'Share Tech Mono',monospace;font-size:10px;outline:none;direction:ltr;}
+.api-input:focus{border-color:var(--gold);}
+.api-input::placeholder{color:rgba(255,215,0,.2);}
+.api-save{background:rgba(255,215,0,.1);border:1px solid var(--gold);border-radius:7px;padding:8px 14px;color:var(--gold);font-size:10px;cursor:pointer;white-space:nowrap;}
+.api-status{font-family:'Share Tech Mono',monospace;font-size:9px;margin-top:5px;padding:5px 8px;border-radius:5px;display:inline-block;}
+.api-status.ok{color:var(--green);background:rgba(57,255,20,.06);border:1px solid rgba(57,255,20,.15);}
+.api-status.err{color:var(--red);background:rgba(255,51,51,.06);border:1px solid rgba(255,51,51,.15);}
+.api-status.wait{color:var(--gold);background:rgba(255,215,0,.04);border:1px solid rgba(255,215,0,.12);}
+.demo-banner{background:linear-gradient(135deg,rgba(0,245,255,.06),rgba(191,0,255,.06));border:1px solid rgba(0,245,255,.2);border-radius:10px;padding:10px 14px;margin:8px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.demo-banner span{font-size:10px;color:rgba(200,230,240,.6);}
+.demo-btn{background:linear-gradient(135deg,rgba(0,245,255,.15),rgba(191,0,255,.1));border:1px solid var(--cyan);border-radius:7px;padding:6px 14px;color:var(--cyan);font-size:10px;cursor:pointer;font-family:'Cairo',sans-serif;font-weight:700;transition:all .2s;white-space:nowrap;}
+.features-bar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:8px 0;}
+.feat{display:flex;align-items:center;gap:5px;background:rgba(0,12,25,.9);border:1px solid rgba(0,245,255,.2);border-radius:8px;padding:6px 12px;font-size:10px;color:#c8e6f0;cursor:pointer;transition:all .3s;user-select:none;}
+.feat.on{border-color:var(--green);color:var(--green);background:rgba(57,255,20,.08);}
+.pills{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0;}
+.pill{display:flex;align-items:center;gap:5px;background:rgba(0,12,25,.8);border:1px solid rgba(0,245,255,.12);border-radius:20px;padding:4px 10px;font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--cyan);}
+.dot{width:6px;height:6px;border-radius:50%;animation:blink 1.5s ease-in-out infinite;flex-shrink:0;}
+.dot.g{background:var(--green);box-shadow:0 0 6px var(--green);}
+.dot.c{background:var(--cyan);box-shadow:0 0 6px var(--cyan);}
+.dot.p{background:var(--purple);box-shadow:0 0 6px var(--purple);}
+.dot.r{background:var(--red);box-shadow:0 0 6px var(--red);}
+@keyframes blink{50%{opacity:.2;}}
+.plwrap{background:var(--card);border:1px solid rgba(0,245,255,.1);border-radius:12px;padding:10px 14px;margin:8px 0;backdrop-filter:blur(8px);}
+.stitle{font-family:'Orbitron',monospace;font-size:9px;color:var(--cyan);letter-spacing:2px;margin-bottom:8px;opacity:.8;display:flex;align-items:center;gap:6px;}
+.stitle::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(0,245,255,.3),transparent);}
+.pipeline{display:flex;align-items:center;overflow-x:auto;padding:4px 0;}
+.pstep{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:58px;flex-shrink:0;}
+.pnode{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid rgba(0,245,255,.18);background:rgba(0,12,25,.8);transition:all .3s;}
+.pnode.active{border-color:var(--green);box-shadow:0 0 14px rgba(57,255,20,.5);animation:npa .6s ease-in-out infinite alternate;}
+.pnode.done{border-color:var(--cyan);box-shadow:0 0 8px rgba(0,245,255,.3);}
+.pnode.error{border-color:var(--red);}
+@keyframes npa{to{transform:scale(1.08);}}
+.plbl{font-size:6px;color:rgba(200,230,240,.5);text-align:center;font-family:'Share Tech Mono',monospace;}
+.parr{flex:1;min-width:8px;height:2px;background:linear-gradient(90deg,rgba(0,245,255,.4),rgba(191,0,255,.4));position:relative;flex-shrink:0;}
+.parr::after{content:'';position:absolute;right:-4px;top:-3px;border:3px solid transparent;border-left-color:rgba(191,0,255,.6);}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:10px 0;}
+.col{display:flex;flex-direction:column;gap:10px;}
+.card{background:var(--card);border-radius:12px;padding:14px;border:1px solid rgba(0,245,255,.1);backdrop-filter:blur(8px);position:relative;overflow:hidden;transition:all .3s;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:0;transition:opacity .3s;}
+.card:hover::before{opacity:1;}
+.cnum{font-family:'Share Tech Mono',monospace;font-size:7px;color:var(--cyan);opacity:.4;letter-spacing:2px;margin-bottom:4px;}
+.ctitle{font-size:11px;font-weight:700;color:#fff;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.cico{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;background:rgba(0,245,255,.1);}
+.cdesc{font-size:10px;color:rgba(200,230,240,.5);line-height:1.5;}
+.rcore{background:var(--card);border-radius:14px;padding:16px 12px;text-align:center;position:relative;overflow:hidden;border:1px solid rgba(0,245,255,.12);backdrop-filter:blur(8px);}
+.rcore::before{content:'';position:absolute;inset:-2px;background:conic-gradient(from 0deg,transparent,var(--cyan) 60deg,transparent 120deg,transparent 180deg,var(--purple) 240deg,transparent 300deg,transparent);border-radius:16px;z-index:-1;animation:spin 5s linear infinite;opacity:.25;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.rwrap{position:relative;display:inline-block;margin-bottom:8px;}
+.rsvg{width:100px;height:100px;animation:rfloat 3s ease-in-out infinite;filter:drop-shadow(0 0 12px rgba(0,245,255,.4));}
+@keyframes rfloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+.ring{position:absolute;inset:-8px;border-radius:50%;border:2px solid var(--cyan);opacity:0;animation:rp 2.5s ease-out infinite;}
+.ring:nth-child(2){animation-delay:.8s;}.ring:nth-child(3){animation-delay:1.6s;}
+@keyframes rp{0%{transform:scale(.7);opacity:.8;}100%{transform:scale(1.5);opacity:0;}}
+.rname{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--cyan);text-shadow:0 0 12px rgba(0,245,255,.5);margin-bottom:3px;letter-spacing:2px;}
+.rst{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--green);letter-spacing:1px;min-height:14px;}
+.vwave{display:flex;align-items:center;justify-content:center;gap:3px;height:22px;margin:5px 0;}
+.wb{width:3px;background:var(--cyan);border-radius:2px;animation:wb 1s ease-in-out infinite;}
+.wb:nth-child(1){height:6px;}.wb:nth-child(2){height:14px;animation-delay:.1s;}
+.wb:nth-child(3){height:20px;animation-delay:.2s;}.wb:nth-child(4){height:14px;animation-delay:.3s;}
+.wb:nth-child(5){height:6px;animation-delay:.4s;}.wb:nth-child(6){height:18px;animation-delay:.5s;}
+.wb:nth-child(7){height:10px;animation-delay:.6s;}
+@keyframes wb{0%,100%{transform:scaleY(1);opacity:.4;}50%{transform:scaleY(1.8);opacity:1;}}
+.vwave.off .wb{animation:none;height:3px;opacity:.15;}
+.vstatus{background:rgba(0,3,8,.9);border-radius:7px;padding:5px 10px;margin-top:5px;display:flex;align-items:center;gap:7px;border:1px solid rgba(0,245,255,.1);}
+.vtxt{font-size:9px;color:rgba(200,230,240,.65);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mrow{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:8px;}
+.mc{background:rgba(0,8,18,.6);border:1px solid rgba(0,245,255,.08);border-radius:8px;padding:7px 4px;text-align:center;}
+.mv{font-family:'Orbitron',monospace;font-size:15px;font-weight:700;color:var(--cyan);}
+.ml{font-size:6px;color:rgba(200,230,240,.35);margin-top:2px;letter-spacing:1px;}
+.ctrl{background:var(--card);border-radius:12px;padding:14px;border:1px solid rgba(0,245,255,.1);backdrop-filter:blur(8px);}
+.ti{width:100%;background:rgba(0,6,15,.9);border:1px solid rgba(0,245,255,.16);border-radius:8px;padding:8px 10px;color:#c8e6f0;font-family:'Cairo',sans-serif;font-size:12px;outline:none;transition:all .3s;resize:vertical;min-height:65px;margin-bottom:8px;}
+.ti:focus{border-color:var(--cyan);}
+.ti::placeholder{color:rgba(200,230,240,.2);}
+.brow{display:flex;gap:6px;flex-wrap:wrap;}
+.btn{background:linear-gradient(135deg,rgba(0,245,255,.1),rgba(191,0,255,.1));border:1px solid var(--cyan);border-radius:8px;padding:9px 12px;color:var(--cyan);font-family:'Cairo',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;flex:1;min-width:60px;text-align:center;user-select:none;}
+.btn:active{transform:scale(.96);}
+.btn:disabled{opacity:.3;cursor:not-allowed;}
+.btn-r{background:linear-gradient(135deg,rgba(57,255,20,.12),rgba(0,245,255,.1));border-color:var(--green);color:var(--green);flex:2;}
+.btn-s{background:linear-gradient(135deg,rgba(255,51,51,.1),rgba(255,0,110,.1));border-color:var(--red);color:var(--red);}
+.btn-gold{background:linear-gradient(135deg,rgba(255,215,0,.1),rgba(255,165,0,.1));border-color:var(--gold);color:var(--gold);}
+.btn-purple{background:linear-gradient(135deg,rgba(191,0,255,.1),rgba(100,0,255,.1));border-color:var(--purple);color:var(--purple);}
+.pgwrap{margin-top:8px;display:none;}
+.pglbl{display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:8px;color:rgba(0,245,255,.5);margin-bottom:3px;}
+.pgbar{height:4px;background:rgba(0,245,255,.07);border-radius:2px;overflow:hidden;}
+.pgfill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--purple));border-radius:2px;transition:width .4s ease;position:relative;overflow:hidden;}
+.pgfill::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);animation:sh 1.5s ease-in-out infinite;}
+@keyframes sh{to{left:100%;}}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:rgba(10,0,20,.97);border-radius:10px;padding:12px 20px;font-size:11px;font-family:'Cairo',sans-serif;z-index:9998;transition:transform .4s;display:flex;align-items:center;gap:10px;max-width:90vw;box-shadow:0 4px 30px rgba(0,0,0,.5);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.ok{border:1px solid var(--green);color:var(--green);}
+.toast.err{border:1px solid var(--red);color:var(--red);}
+.toast.warn{border:1px solid var(--gold);color:var(--gold);}
+.toast.info{border:1px solid var(--cyan);color:var(--cyan);}
+.logpanel{background:var(--card);border-radius:12px;padding:12px;border:1px solid rgba(0,245,255,.1);backdrop-filter:blur(8px);}
+.logout{background:rgba(0,3,8,.95);border-radius:7px;padding:8px;height:140px;overflow-y:auto;font-family:'Share Tech Mono',monospace;font-size:9px;line-height:1.9;border:1px solid rgba(0,245,255,.05);}
+.ll{display:flex;gap:6px;margin-bottom:1px;opacity:0;animation:li .2s forwards;}
+@keyframes li{to{opacity:1;}}
+.lts{color:rgba(0,245,255,.3);flex-shrink:0;font-size:8px;}
+.ltag{flex-shrink:0;}
+.ltag.info{color:var(--cyan);}.ltag.ok{color:var(--green);}.ltag.warn{color:var(--gold);}.ltag.act{color:var(--purple);}.ltag.err{color:var(--red);}
+.lmsg{color:rgba(200,230,240,.7);word-break:break-all;}
+.dg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;}
+.di{background:rgba(0,6,15,.6);border:1px solid rgba(0,245,255,.08);border-radius:7px;padding:8px;display:flex;align-items:center;gap:6px;transition:all .3s;}
+.di.hit{border-color:var(--green);background:rgba(57,255,20,.04);}
+.dico{font-size:13px;width:26px;height:26px;border-radius:6px;background:rgba(0,245,255,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.dn{font-size:9px;font-weight:700;color:#fff;}
+.dc{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--cyan);margin-top:1px;}
+.sc{background:rgba(0,3,8,.8);border:1px dashed rgba(0,245,255,.16);border-radius:8px;height:110px;position:relative;overflow:hidden;margin-top:8px;cursor:pointer;transition:all .3s;display:flex;align-items:center;justify-content:center;}
+.sc canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.scanl{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);box-shadow:0 0 8px var(--cyan);animation:sm 2s linear infinite;display:none;}
+@keyframes sm{0%{top:0;}100%{top:100%;}}
+.sclbl{font-size:9px;color:rgba(0,245,255,.4);font-family:'Share Tech Mono',monospace;z-index:1;text-align:center;padding:8px;line-height:1.7;}
+.upload-area{background:rgba(0,3,8,.8);border:1px dashed rgba(0,245,255,.2);border-radius:8px;padding:12px;text-align:center;margin-top:8px;cursor:pointer;transition:all .3s;display:none;}
+.upload-area input{display:none;}
+.upload-label{font-size:10px;color:rgba(0,245,255,.5);font-family:'Share Tech Mono',monospace;cursor:pointer;display:block;}
+.jv{background:rgba(0,3,8,.95);border-radius:7px;padding:8px;font-family:'Share Tech Mono',monospace;font-size:8px;line-height:1.9;border:1px solid rgba(57,255,20,.1);min-height:80px;max-height:150px;overflow-y:auto;margin-top:8px;direction:ltr;}
+.jk{color:var(--cyan);}.js{color:var(--gold);}.jn{color:var(--green);}.jb{color:var(--purple);}
+.atags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;}
+.atag{background:rgba(0,6,15,.8);border:1px solid rgba(0,245,255,.15);border-radius:4px;padding:3px 7px;font-family:'Share Tech Mono',monospace;font-size:8px;color:rgba(200,230,240,.5);}
+.atag.on{border-color:var(--green);color:var(--green);background:rgba(57,255,20,.05);}
+.tr{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(0,245,255,.04);font-size:10px;color:rgba(200,230,240,.6);}
+.tr:last-child{border-bottom:none;}
+.tog{width:30px;height:15px;background:rgba(0,245,255,.07);border:1px solid rgba(0,245,255,.16);border-radius:8px;position:relative;cursor:pointer;transition:all .3s;flex-shrink:0;}
+.tog.on{background:rgba(57,255,20,.2);border-color:var(--green);}
+.tog::after{content:'';position:absolute;width:9px;height:9px;background:rgba(200,230,240,.35);border-radius:50%;top:2px;left:2px;transition:all .3s;}
+.tog.on::after{left:17px;background:var(--green);box-shadow:0 0 4px var(--green);}
+.cbadge{display:inline-flex;align-items:center;gap:4px;background:rgba(57,255,20,.06);border:1px solid rgba(57,255,20,.18);border-radius:4px;padding:3px 8px;font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--green);margin-top:5px;}
+.result-panel{background:var(--card);border-radius:12px;padding:14px;backdrop-filter:blur(8px);display:none;margin-top:10px;border:1px solid rgba(57,255,20,.15);}
+.result-panel.show{display:block;}
+.result-body{font-size:11px;line-height:1.9;color:#c8e6f0;white-space:pre-wrap;background:rgba(0,3,8,.5);border-radius:8px;padding:12px;border:1px solid rgba(57,255,20,.08);max-height:300px;overflow-y:auto;}
+.mic-panel{background:var(--card);border-radius:12px;padding:14px;backdrop-filter:blur(8px);display:none;margin-top:10px;border:1px solid rgba(255,51,51,.2);}
+.mic-panel.show{display:block;}
+.mic-visualizer{background:rgba(0,3,8,.9);border-radius:10px;padding:16px;text-align:center;border:1px solid rgba(255,51,51,.1);}
+.mic-icon{font-size:32px;margin-bottom:6px;}
+.mic-icon.recording{animation:micpulse .5s ease-in-out infinite alternate;}
+@keyframes micpulse{to{transform:scale(1.2);filter:drop-shadow(0 0 10px #ff3333);}}
+.mic-bars{display:flex;align-items:center;justify-content:center;gap:3px;height:28px;margin:6px 0;}
+.mb{width:4px;background:var(--red);border-radius:2px;height:4px;}
+.mic-bars.active .mb{animation:mbwave .4s ease-in-out infinite;}
+.mb:nth-child(1){animation-delay:0s;}.mb:nth-child(2){animation-delay:.05s;}.mb:nth-child(3){animation-delay:.1s;}
+.mb:nth-child(4){animation-delay:.15s;}.mb:nth-child(5){animation-delay:.2s;}.mb:nth-child(6){animation-delay:.25s;}
+.mb:nth-child(7){animation-delay:.3s;}.mb:nth-child(8){animation-delay:.35s;}.mb:nth-child(9){animation-delay:.4s;}
+@keyframes mbwave{0%,100%{height:4px;}50%{height:24px;}}
+.mic-status{font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(200,230,240,.5);}
+.mic-status.recording{color:var(--red);animation:blink 1s ease-in-out infinite;}
+.transcript-box{background:rgba(0,3,8,.8);border-radius:8px;padding:10px;margin-top:8px;border:1px solid rgba(0,245,255,.08);min-height:50px;}
+.cmd-example{background:rgba(0,6,15,.8);border:1px solid rgba(255,51,51,.2);border-radius:5px;padding:4px 9px;font-size:9px;color:rgba(255,100,100,.7);cursor:pointer;font-family:'Share Tech Mono',monospace;}
+.compare-panel{background:var(--card);border-radius:12px;padding:14px;backdrop-filter:blur(8px);display:none;margin-top:10px;border:1px solid rgba(191,0,255,.2);}
+.compare-panel.show{display:block;}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+.csc{background:rgba(0,3,8,.8);border:1px dashed rgba(0,245,255,.16);border-radius:8px;height:100px;position:relative;overflow:hidden;cursor:pointer;transition:all .3s;display:flex;align-items:center;justify-content:center;}
+.csc canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.clbl{font-size:8px;color:rgba(0,245,255,.4);font-family:'Share Tech Mono',monospace;z-index:1;text-align:center;padding:4px;line-height:1.5;}
+.cup{background:rgba(0,3,8,.8);border:1px dashed rgba(0,245,255,.2);border-radius:8px;padding:10px;text-align:center;margin-top:6px;cursor:pointer;display:none;}
+.cup input{display:none;}
+.cup-lbl{font-size:9px;color:rgba(0,245,255,.5);font-family:'Share Tech Mono',monospace;cursor:pointer;display:block;}
+.cresult{background:rgba(0,3,8,.9);border-radius:7px;padding:10px;margin-top:8px;font-size:10px;line-height:1.8;border:1px solid rgba(191,0,255,.12);min-height:50px;color:#c8e6f0;}
+.device-info{background:rgba(0,245,255,.05);border:1px solid rgba(0,245,255,.2);border-radius:10px;padding:10px 14px;margin:8px 0;font-size:11px;text-align:center;display:none;}
+.device-info.show{display:block;}
+.footer{text-align:center;padding:20px 12px;font-family:'Share Tech Mono',monospace;font-size:7px;color:rgba(200,230,240,.12);letter-spacing:2px;}
+@media(max-width:900px){.grid{grid-template-columns:1fr 1fr;}.col:nth-child(2){grid-column:span 2;order:-1;}}
+@media(max-width:600px){.grid{grid-template-columns:1fr;}.col:nth-child(2){grid-column:span 1;}.mrow{grid-template-columns:repeat(4,1fr);}.brow{gap:5px;}.btn{padding:9px 7px;font-size:10px;}.rsvg{width:88px;height:88px;}.cgrid{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<div id="splash">
+  <div class="splash-logo">🤖 GEMINI LIVE AGENT</div>
+  <div class="splash-sub">AI VISUAL AUTOMATION SYSTEM v5</div>
+  <div class="splash-bar"><div class="splash-fill"></div></div>
+  <div class="splash-steps">
+    <div class="splash-step" id="ss0">⚡ Initializing systems...</div>
+    <div class="splash-step" id="ss1">👁️ Loading Gemini Vision engine...</div>
+    <div class="splash-step" id="ss2">🔑 Checking API credentials...</div>
+    <div class="splash-step" id="ss3">✅ All systems ready!</div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="wrap">
+<div class="header">
+  <div class="badge">◈ GEMINI LIVE AGENT ◈ HACKATHON EDITION ◈</div>
+  <h1>AI Visual Automation</h1>
+  <div class="sub">Sees • Analyzes • Automates — Powered by Gemini 1.5 Flash</div>
+  <div class="vbadge" id="deviceBadge">🖥️ Detecting...</div>
+  <div class="vbadge" style="border-color:var(--gold);color:var(--gold);background:rgba(255,215,0,.07);margin-top:4px;">✨ v5.0 — No Backend · Direct Gemini API · Free Forever</div>
+</div>
+<div class="device-info" id="deviceInfo"></div>
+<div class="api-config">
+  <div style="font-size:9px;color:var(--gold);font-family:'Share Tech Mono',monospace;margin-bottom:6px;">🔑 GEMINI API KEY</div>
+  <div style="font-size:9px;color:rgba(200,230,240,.4);margin-bottom:8px;">احصل على مفتاحك المجاني: <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--gold);">aistudio.google.com</a></div>
+  <div class="api-row">
+    <input class="api-input" id="apiKeyInput" type="password" placeholder="AIzaSy...">
+    <button class="api-save" onclick="saveApiKey()">💾 حفظ</button>
+    <button class="api-save" onclick="testApiKey()" style="border-color:var(--cyan);color:var(--cyan);background:rgba(0,245,255,.05);">🔗 تجربة</button>
+    <button class="api-save" onclick="toggleShowKey()" id="showKeyBtn" style="border-color:rgba(200,230,240,.2);color:rgba(200,230,240,.4);background:transparent;">👁</button>
+  </div>
+  <div class="api-status wait" id="apiStatus">⏳ أدخل Gemini API Key للبدء</div>
+</div>
+<div class="demo-banner">
+  <span>🎯 جرب مباشرة — اضغط Demo بدون أي إعداد</span>
+  <button class="demo-btn" onclick="loadDemo()">▶ تشغيل Demo</button>
+  <button class="demo-btn" onclick="loadPreset()" style="border-color:var(--purple);color:var(--purple);">🎲 Preset</button>
+</div>
+<div class="features-bar">
+  <div class="feat on"><span>👁️</span><span>Vision</span></div>
+  <div class="feat" id="fp-voice" onclick="toggleVoice()"><span>🔊</span><span>Voice</span></div>
+  <div class="feat" id="fp-mic" onclick="toggleMic()"><span>🎤</span><span>Mic</span></div>
+  <div class="feat" id="fp-cmp" onclick="toggleCompare()"><span>🔄</span><span>Compare</span></div>
+  <div class="feat" id="fp-pdf" onclick="generatePDF()"><span>📄</span><span>PDF</span></div>
+  <div class="feat" id="fp-json" onclick="exportJSON()"><span>📦</span><span>JSON</span></div>
+</div>
+<div class="pills">
+  <div class="pill"><div class="dot g"></div><span>SYSTEM ONLINE</span></div>
+  <div class="pill"><div class="dot r" id="apiDot"></div><span id="apiPill">GEMINI ⏳</span></div>
+  <div class="pill"><div class="dot c" id="capDot"></div><span id="capStatus">CAPTURE READY</span></div>
+  <div class="pill"><div class="dot p" id="voiceDot"></div><span id="voicePill">VOICE OFF</span></div>
+  <div class="pill"><div class="dot r" id="micDot"></div><span id="micPill">MIC OFF</span></div>
+</div>
+<div class="plwrap">
+  <div class="stitle">⚡ PROCESSING PIPELINE</div>
+  <div class="pipeline">
+    <div class="pstep"><div class="pnode" id="pn0">📸</div><div class="plbl">Capture</div></div>
+    <div class="parr"></div>
+    <div class="pstep"><div class="pnode" id="pn1">👁️</div><div class="plbl">Gemini</div></div>
+    <div class="parr"></div>
+    <div class="pstep"><div class="pnode" id="pn2">🔍</div><div class="plbl">Detect</div></div>
+    <div class="parr"></div>
+    <div class="pstep"><div class="pnode" id="pn3">🧠</div><div class="plbl">Engine</div></div>
+    <div class="parr"></div>
+    <div class="pstep"><div class="pnode" id="pn4">📦</div><div class="plbl">JSON</div></div>
+    <div class="parr"></div>
+    <div class="pstep"><div class="pnode" id="pn5">🔊</div><div class="plbl">Voice</div></div>
+    <div class="parr"></div>
+    <div class="pstep"><div class="pnode" id="pn6">✅</div><div class="plbl">Done</div></div>
+  </div>
+</div>
+<div class="grid">
+<div class="col">
+  <div class="card">
+    <div class="cnum">MODULE 01</div>
+    <div class="ctitle"><div class="cico">👁️</div>Gemini Vision</div>
+    <div class="cdesc">تحليل الصور مباشرة عبر Gemini API بدون سيرفر.</div>
+    <div class="atags"><span class="atag">OCR</span><span class="atag">Layout</span><span class="atag">Elements</span><span class="atag">Direct API</span></div>
+  </div>
+  <div class="card">
+    <div class="cnum">MODULE 02</div>
+    <div class="ctitle"><div class="cico">🔍</div>UI Detection</div>
+    <div class="cdesc">اكتشاف عناصر الواجهة التفاعلية تلقائياً.</div>
+    <div class="dg">
+      <div class="di" id="db"><div class="dico">🖱️</div><div><div class="dn">Buttons</div><div class="dc" id="dbc">—</div></div></div>
+      <div class="di" id="di2"><div class="dico">⌨️</div><div><div class="dn">Inputs</div><div class="dc" id="dic">—</div></div></div>
+      <div class="di" id="dt"><div class="dico">📝</div><div><div class="dn">Text</div><div class="dc" id="dtc">—</div></div></div>
+      <div class="di" id="dl"><div class="dico">🔗</div><div><div class="dn">Links</div><div class="dc" id="dlc">—</div></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="cnum">MODULE 04</div>
+    <div class="ctitle"><div class="cico">📸</div>Screen Capture</div>
+    <div class="cdesc" id="captureDesc">اضغط لالتقاط الشاشة.</div>
+    <div class="sc" id="scprev" onclick="captureScreen()">
+      <canvas id="cvs"></canvas>
+      <div class="scanl" id="scanl"></div>
+      <div class="sclbl" id="sclbl">🖥️ اضغط لالتقاط الشاشة</div>
+    </div>
+    <div class="upload-area" id="uploadArea" onclick="document.getElementById('imgUpload').click()">
+      <input type="file" id="imgUpload" accept="image/*" onchange="handleImageUpload(event)">
+      <div class="upload-label">📱 ارفع صورة للتحليل<br><span style="opacity:.6;font-size:9px;">خد Screenshot وارفعه هنا</span></div>
+    </div>
+  </div>
+</div>
+<div class="col">
+  <div class="rcore">
+    <div class="rwrap">
+      <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+      <svg class="rsvg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#0a2a4a"/><stop offset="100%" style="stop-color:#0d1b2a"/></linearGradient>
+          <linearGradient id="gl2" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#00f5ff;stop-opacity:0"/><stop offset="50%" style="stop-color:#00f5ff;stop-opacity:1"/><stop offset="100%" style="stop-color:#00f5ff;stop-opacity:0"/></linearGradient>
+          <filter id="gf"><feGaussianBlur stdDeviation="2.5" result="cb"/><feMerge><feMergeNode in="cb"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+        <line x1="100" y1="18" x2="100" y2="44" stroke="#00f5ff" stroke-width="2.5" filter="url(#gf)"/>
+        <circle cx="100" cy="14" r="6" fill="none" stroke="#00f5ff" stroke-width="2" filter="url(#gf)"/>
+        <circle cx="100" cy="14" r="3" fill="#00f5ff"><animate attributeName="opacity" values="1;0.2;1" dur="1.5s" repeatCount="indefinite"/></circle>
+        <rect x="60" y="44" width="80" height="66" rx="14" fill="url(#bg2)" stroke="#00f5ff" stroke-width="1.5" filter="url(#gf)"/>
+        <rect x="74" y="61" width="18" height="14" rx="4" fill="#000c18" stroke="#00f5ff" stroke-width="1.5"/>
+        <rect x="108" y="61" width="18" height="14" rx="4" fill="#000c18" stroke="#00f5ff" stroke-width="1.5"/>
+        <rect x="77" y="64" width="12" height="8" rx="2" fill="#00f5ff" filter="url(#gf)"><animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite"/></rect>
+        <rect x="111" y="64" width="12" height="8" rx="2" fill="#00f5ff" filter="url(#gf)"><animate attributeName="opacity" values="1;0.4;1" dur="2s" begin="0.3s" repeatCount="indefinite"/></rect>
+        <rect x="78" y="86" width="44" height="10" rx="5" fill="#000c18" stroke="#39ff14" stroke-width="1"/>
+        <rect x="82" y="89" width="7" height="4" rx="2" fill="#39ff14"/><rect x="93" y="89" width="7" height="4" rx="2" fill="#39ff14"/>
+        <rect x="104" y="89" width="7" height="4" rx="2" fill="#39ff14"/><rect x="115" y="89" width="7" height="4" rx="2" fill="#39ff14"/>
+        <rect x="62" y="46" width="76" height="2" rx="1" fill="url(#gl2)" opacity="0.7"><animateTransform attributeName="transform" type="translate" values="0,0;0,54;0,0" dur="3s" repeatCount="indefinite"/></rect>
+        <rect x="88" y="110" width="24" height="12" rx="4" fill="url(#bg2)" stroke="#00f5ff" stroke-width="1" opacity="0.8"/>
+        <rect x="48" y="122" width="104" height="55" rx="14" fill="url(#bg2)" stroke="#00f5ff" stroke-width="1.5" filter="url(#gf)"/>
+        <rect x="62" y="132" width="76" height="35" rx="8" fill="#000c18" stroke="rgba(0,245,255,0.25)" stroke-width="1"/>
+        <circle cx="84" cy="150" r="9" fill="none" stroke="#bf00ff" stroke-width="1.5"/>
+        <circle cx="84" cy="150" r="3" fill="#bf00ff"><animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite"/></circle>
+        <rect x="98" y="137" width="30" height="4" rx="2" fill="rgba(0,245,255,0.4)"/>
+        <rect x="98" y="145" width="24" height="4" rx="2" fill="rgba(57,255,20,0.4)"/>
+        <rect x="98" y="153" width="28" height="4" rx="2" fill="rgba(255,215,0,0.4)"/>
+        <rect x="20" y="125" width="28" height="44" rx="10" fill="url(#bg2)" stroke="#00f5ff" stroke-width="1.5"><animateTransform attributeName="transform" type="rotate" values="5,34,140;-5,34,140;5,34,140" dur="2s" repeatCount="indefinite"/></rect>
+        <rect x="152" y="125" width="28" height="44" rx="10" fill="url(#bg2)" stroke="#00f5ff" stroke-width="1.5"><animateTransform attributeName="transform" type="rotate" values="-5,166,140;5,166,140;-5,166,140" dur="2s" repeatCount="indefinite"/></rect>
+        <circle cx="34" cy="172" r="9" fill="url(#bg2)" stroke="#00f5ff" stroke-width="1.5"/>
+        <circle cx="166" cy="172" r="9" fill="url(#bg2)" stroke="#00f5ff" stroke-width="1.5"/>
+        <rect x="68" y="177" width="28" height="19" rx="8" fill="url(#bg2)" stroke="#00f5ff" stroke-width="1.5"/>
+        <rect x="104" y="177" width="28" height="19" rx="8" fill="url(#bg2)" stroke="#00f5ff" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <div class="rname">GEMINI LIVE AGENT</div>
+    <div class="rst" id="rst">✅ READY — v5 HACKATHON</div>
+    <div class="vwave off" id="vwave">
+      <div class="wb"></div><div class="wb"></div><div class="wb"></div>
+      <div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div>
+    </div>
+    <div class="vstatus"><span>🔊</span><span class="vtxt" id="vtxt">اضغط زرار الصوت للتفعيل</span></div>
+    <div class="mrow">
+      <div class="mc"><div class="mv" id="mT">0</div><div class="ml">TASKS</div></div>
+      <div class="mc"><div class="mv" id="mS">0</div><div class="ml">SCANS</div></div>
+      <div class="mc"><div class="mv" id="mA">—</div><div class="ml">ACC</div></div>
+      <div class="mc"><div class="mv" id="mL">—</div><div class="ml">MS</div></div>
+    </div>
+  </div>
+  <div class="ctrl">
+    <div class="stitle">🎯 CONTROL PANEL</div>
+    <textarea class="ti" id="taskIn" placeholder="اكتب المهمة...">حلل الشاشة دي واذكر كل العناصر الموجودة، الأزرار، النصوص، والروابط.</textarea>
+    <div class="brow">
+      <button class="btn btn-purple" onclick="toggleVoice()">🔊</button>
+      <button class="btn" onclick="toggleMic()" style="border-color:#ff3333;color:#ff3333;">🎤</button>
+      <button class="btn btn-gold" onclick="generatePDF()">📄</button>
+      <button class="btn" onclick="exportJSON()" style="border-color:var(--green);color:var(--green);">📦</button>
+      <button class="btn" onclick="toggleCompare()" style="border-color:var(--purple);color:var(--purple);">🔄</button>
+      <button class="btn" onclick="clearAll()">Clear</button>
+      <button class="btn btn-s" onclick="stopAgent()">⏹</button>
+      <button class="btn btn-r" id="runBtn" onclick="startAgent()">▶ Run</button>
+    </div>
+    <div class="pgwrap" id="pgwrap">
+      <div class="pglbl"><span id="pglbl">Processing...</span><span id="pgpct">0%</span></div>
+      <div class="pgbar"><div class="pgfill" id="pgfill" style="width:0%"></div></div>
+    </div>
+  </div>
+  <div class="logpanel">
+    <div class="stitle">📟 OPERATION LOG</div>
+    <div class="logout" id="log"></div>
+  </div>
+</div>
+<div class="col">
+  <div class="card">
+    <div class="cnum">MODULE 03</div>
+    <div class="ctitle"><div class="cico">🧠</div>Automation Engine</div>
+    <div class="cdesc">محرك القرارات — يختار الإجراء المناسب.</div>
+    <div class="atags">
+      <span class="atag" id="ta0">🖱️ Click</span><span class="atag" id="ta1">⌨️ Type</span>
+      <span class="atag" id="ta2">↕️ Scroll</span><span class="atag" id="ta3">🔗 Navigate</span>
+      <span class="atag" id="ta4">⏳ Wait</span><span class="atag" id="ta5">📤 Extract</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="cnum">MODULE 05</div>
+    <div class="ctitle"><div class="cico">📦</div>JSON Response</div>
+    <div class="cdesc">الرد المباشر من Gemini API.</div>
+    <div class="jv" id="jv"><span style="color:rgba(200,230,240,.2)">// Waiting for Gemini...</span></div>
+  </div>
+  <div class="card">
+    <div class="cnum">MODULE 07</div>
+    <div class="ctitle"><div class="cico">⚡</div>Direct API Mode</div>
+    <div class="cdesc">بدون سيرفر — Gemini مباشرة من المتصفح.</div>
+    <div class="cbadge">✅ NO BACKEND NEEDED</div>
+    <div class="cbadge" id="geminiBadge" style="border-color:rgba(255,215,0,.18);color:var(--gold);background:rgba(255,215,0,.05);margin-top:5px;">⏳ GEMINI: WAITING KEY</div>
+    <div style="margin-top:10px;">
+      <div class="tr"><span>Screen Capture</span><div class="tog on" onclick="this.classList.toggle('on')"></div></div>
+      <div class="tr"><span>🔊 Voice Output</span><div class="tog" id="voiceToggle" onclick="toggleVoice()"></div></div>
+      <div class="tr"><span>🎤 Voice Commands</span><div class="tog" id="micToggle" onclick="toggleMic()"></div></div>
+      <div class="tr"><span>📦 Auto Export JSON</span><div class="tog" id="jsonToggle" onclick="this.classList.toggle('on')"></div></div>
+    </div>
+  </div>
+</div>
+</div>
+<div class="result-panel" id="resultPanel">
+  <div class="stitle">🎯 GEMINI ANALYSIS RESULT</div>
+  <div class="result-body" id="resultText"></div>
+  <div style="margin-top:10px;display:flex;gap:7px;flex-wrap:wrap;">
+    <button class="btn btn-purple" onclick="speakResult()" style="flex:1;">🔊 استمع</button>
+    <button class="btn" onclick="copyResult()" style="flex:1;">📋 نسخ</button>
+    <button class="btn btn-gold" onclick="generatePDF()" style="flex:1;">📄 PDF</button>
+    <button class="btn" onclick="exportJSON()" style="flex:1;border-color:var(--green);color:var(--green);">📦 JSON</button>
+  </div>
+</div>
+<div class="mic-panel" id="micPanel">
+  <div class="stitle">🎤 VOICE COMMANDS</div>
+  <div class="mic-visualizer">
+    <div class="mic-icon" id="micIcon">🎤</div>
+    <div class="mic-bars" id="micBars">
+      <div class="mb"></div><div class="mb"></div><div class="mb"></div>
+      <div class="mb"></div><div class="mb"></div><div class="mb"></div>
+      <div class="mb"></div><div class="mb"></div><div class="mb"></div>
+    </div>
+    <div class="mic-status" id="micStatus">اضغط Start للتسجيل</div>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+    <button class="btn" id="startRecBtn" onclick="startRecording()" style="flex:1;border-color:#ff3333;color:#ff3333;">🎤 Start</button>
+    <button class="btn" id="stopRecBtn" onclick="stopRecording()" style="flex:1;border-color:var(--gold);color:var(--gold);display:none;">⏹ Stop</button>
+    <button class="btn btn-r" id="sendRecBtn" onclick="runFromVoice()" style="flex:1;display:none;">▶ Run</button>
+  </div>
+  <div class="transcript-box">
+    <div style="font-size:9px;color:rgba(0,245,255,.4);font-family:'Share Tech Mono',monospace;margin-bottom:5px;">Transcript:</div>
+    <div id="transcriptText" style="font-size:12px;color:#c8e6f0;min-height:28px;">—</div>
+  </div>
+  <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:5px;">
+    <span class="cmd-example" onclick="useExample(this)">حلل الصفحة دي</span>
+    <span class="cmd-example" onclick="useExample(this)">كم زرار موجود</span>
+    <span class="cmd-example" onclick="useExample(this)">استخرج النصوص</span>
+    <span class="cmd-example" onclick="useExample(this)">نوع الصفحة إيه</span>
+  </div>
+</div>
+<div class="compare-panel" id="comparePanel">
+  <div class="stitle">🔄 COMPARE TWO PAGES</div>
+  <div class="cgrid">
+    <div>
+      <div style="font-size:9px;color:var(--cyan);margin-bottom:5px;font-family:'Share Tech Mono',monospace;">الصفحة الأولى</div>
+      <div class="csc" id="csc1" onclick="captureCompare(1)"><canvas id="cvs1"></canvas><div class="clbl" id="clbl1">📸 اضغط للتصوير</div></div>
+      <div class="cup" id="cup1" onclick="document.getElementById('cimg1').click()">
+        <input type="file" id="cimg1" accept="image/*" onchange="handleCompareUpload(event,1)">
+        <div class="cup-lbl">📱 ارفع صورة 1</div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:9px;color:var(--purple);margin-bottom:5px;font-family:'Share Tech Mono',monospace;">الصفحة الثانية</div>
+      <div class="csc" id="csc2" onclick="captureCompare(2)"><canvas id="cvs2"></canvas><div class="clbl" id="clbl2">📸 اضغط للتصوير</div></div>
+      <div class="cup" id="cup2" onclick="document.getElementById('cimg2').click()">
+        <input type="file" id="cimg2" accept="image/*" onchange="handleCompareUpload(event,2)">
+        <div class="cup-lbl">📱 ارفع صورة 2</div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:10px;display:flex;gap:7px;flex-wrap:wrap;">
+    <button class="btn" onclick="comparePages()" style="flex:2;border-color:var(--purple);color:var(--purple);">🔄 قارن بـ Gemini</button>
+    <button class="btn btn-gold" onclick="exportComparePDF()" style="flex:1;">📄 PDF</button>
+  </div>
+  <div class="cresult" id="cresult"><span style="color:rgba(200,230,240,.25)">التقط أو ارفع صورتين ثم اضغط قارن...</span></div>
+</div>
+<div class="footer">GEMINI LIVE AGENT v5 ◈ HACKATHON EDITION ◈ NO BACKEND ◈ DIRECT GEMINI API</div>
+</div>
+<script>
+let GEMINI_API_KEY = '';
+let capturedImageBase64=null,running=false,taskCount=0,scanCount=0;
+let voiceEnabled=false,micEnabled=false,compareEnabled=false;
+let lastResult='',lastJSON=null,recognition=null,isRecording=false,isMobile=false;
+let compareImg1=null,compareImg2=null;
+
+window.addEventListener('load',()=>{
+  const steps=['ss0','ss1','ss2','ss3'];
+  steps.forEach((id,i)=>setTimeout(()=>document.getElementById(id).classList.add('show'),i*500));
+  setTimeout(()=>{document.getElementById('splash').classList.add('hide');setTimeout(()=>document.getElementById('splash').remove(),700);},2400);
+  detectDevice();
+  initSpeechRecognition();
+  try{GEMINI_API_KEY=localStorage.getItem('gemini_api_key')||'';}catch(e){}
+  if(GEMINI_API_KEY){
+    document.getElementById('apiKeyInput').value=GEMINI_API_KEY;
+    setApiStatus('ok','✅ API Key جاهز — يلا نحلل! 🚀');
+    updateApiUI(true);
+  } else {
+    setApiStatus('wait','⏳ أدخل Gemini API Key للبدء');
+    updateApiUI(false);
+  }
+  log('SYS','ok','Gemini Live Agent v5 — Hackathon Edition Ready!');
+  log('SYS','info','No backend needed — Direct Gemini API');
+});
+
+function detectDevice(){
+  isMobile=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)||window.innerWidth<768;
+  const badge=document.getElementById('deviceBadge'),info=document.getElementById('deviceInfo');
+  if(isMobile){
+    badge.textContent='📱 Mobile Mode';
+    badge.style.cssText='display:inline-block;background:rgba(255,215,0,.1);border:1px solid var(--gold);border-radius:20px;padding:3px 12px;font-family:Share Tech Mono,monospace;font-size:9px;color:var(--gold);margin-top:6px;';
+    info.classList.add('show');
+    info.innerHTML='📱 <strong style="color:var(--gold)">Mobile Mode</strong> — خد Screenshot وارفعه هنا ✅';
+    document.getElementById('scprev').style.display='none';
+    document.getElementById('uploadArea').style.display='block';
+    document.getElementById('capStatus').textContent='UPLOAD MODE 📱';
+    log('SYS','warn','Mobile detected — Upload mode active');
+  } else {
+    badge.textContent='🖥️ Desktop Mode — Full Features';
+    badge.style.cssText='display:inline-block;background:rgba(57,255,20,.1);border:1px solid var(--green);border-radius:20px;padding:3px 12px;font-family:Share Tech Mono,monospace;font-size:9px;color:var(--green);margin-top:6px;';
+    log('SYS','ok','Desktop mode — All features available');
+  }
+}
+
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function ts(){const n=new Date();return [n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');}
+
+function log(tag,type,msg){
+  const out=document.getElementById('log'),div=document.createElement('div');
+  div.className='ll';
+  div.innerHTML=`<span class="lts">${ts()}</span><span class="ltag ${type}">[${tag}]</span><span class="lmsg">${escH(msg)}</span>`;
+  out.appendChild(div);out.scrollTop=out.scrollHeight;
+}
+
+function setRst(t){document.getElementById('rst').textContent=t;}
+
+function setPipe(idx,state){
+  for(let i=0;i<7;i++)document.getElementById('pn'+i).className='pnode';
+  if(state==='active')document.getElementById('pn'+idx).classList.add('active');
+  else if(state==='done'){for(let i=0;i<=idx;i++)document.getElementById('pn'+i).classList.add('done');}
+  else if(state==='error')document.getElementById('pn'+idx).classList.add('error');
+}
+
+function setProgress(pct,label){
+  document.getElementById('pgwrap').style.display='block';
+  document.getElementById('pgfill').style.width=pct+'%';
+  document.getElementById('pgpct').textContent=pct+'%';
+  if(label)document.getElementById('pglbl').textContent=label;
+  if(pct>=100)setTimeout(()=>{document.getElementById('pgwrap').style.display='none';},1400);
+}
+
+function showToast(msg,type='info',duration=3000){
+  const t=document.getElementById('toast');
+  t.textContent=(type==='ok'?'✅ ':type==='err'?'❌ ':type==='warn'?'⚠️ ':'ℹ️ ')+msg;
+  t.className=`toast ${type} show`;
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove('show'),duration);
+}
+
+function showJSON(obj){
+  const str=JSON.stringify(obj,null,2);
+  document.getElementById('jv').innerHTML=str
+    .replace(/("[\w_]+")\s*:/g,'<span class="jk">$1</span>:')
+    .replace(/:\s*(".*?")/g,': <span class="js">$1</span>')
+    .replace(/:\s*(\d+\.?\d*)/g,': <span class="jn">$1</span>')
+    .replace(/:\s*(true|false|null)/g,': <span class="jb">$1</span>');
+}
+
+function updateDetection(p){
+  const ui=p.ui_elements||{};
+  const b=ui.buttons||0,i=ui.inputs||0,t=ui.text_elements||0,l=ui.links||0;
+  document.getElementById('dbc').textContent=b+' found';
+  document.getElementById('dic').textContent=i+' found';
+  document.getElementById('dtc').textContent=t+' found';
+  document.getElementById('dlc').textContent=l+' found';
+  if(b>0)document.getElementById('db').classList.add('hit');
+  if(i>0)document.getElementById('di2').classList.add('hit');
+  if(t>0)document.getElementById('dt').classList.add('hit');
+  if(l>0)document.getElementById('dl').classList.add('hit');
+  if(p.confidence)document.getElementById('mA').textContent=Math.round(p.confidence*100)+'%';
+  ['ta0','ta1','ta2','ta3','ta4','ta5'].forEach((id,idx)=>{
+    document.getElementById(id).classList.toggle('on',idx<(p.recommended_actions||[]).length);
+  });
+}
+
+function saveApiKey(){
+  const key=document.getElementById('apiKeyInput').value.trim();
+  if(!key){showToast('أدخل الـ API Key الأول!','warn');return;}
+  if(!key.startsWith('AIza')){showToast('API Key مش صح','err');return;}
+  GEMINI_API_KEY=key;
+  try{localStorage.setItem('gemini_api_key',key);}catch(e){}
+  setApiStatus('ok','✅ تم الحفظ — جاري الاختبار...');
+  testApiKey();
+}
+
+async function testApiKey(){
+  const key=document.getElementById('apiKeyInput').value.trim()||GEMINI_API_KEY;
+  if(!key){showToast('أدخل API Key','warn');return;}
+  setApiStatus('wait','⏳ جاري الاختبار...');
+  try{
+    const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:'Say OK'}]}],generationConfig:{maxOutputTokens:5}})});
+    if(res.ok){
+      GEMINI_API_KEY=key;
+      try{localStorage.setItem('gemini_api_key',key);}catch(e){}
+      setApiStatus('ok','✅ Gemini API متصل! 🚀');
+      updateApiUI(true);
+      showToast('Gemini متصل!','ok');
+      log('KEY','ok','✅ Connected!');
+    } else {
+      const e=await res.json();
+      setApiStatus('err','❌ '+(e.error?.message||'Key غلط'));
+      updateApiUI(false);
+    }
+  }catch(e){setApiStatus('err','❌ خطأ');showToast('خطأ في الاتصال','err');}
+}
+
+function setApiStatus(type,msg){
+  const el=document.getElementById('apiStatus');
+  el.className='api-status '+type;el.textContent=msg;
+}
+
+function updateApiUI(ok){
+  document.getElementById('apiDot').className='dot '+(ok?'g':'r');
+  document.getElementById('apiPill').textContent=ok?'GEMINI ✅':'GEMINI ❌';
+  document.getElementById('geminiBadge').textContent=ok?'✅ GEMINI: CONNECTED':'❌ GEMINI: NO KEY';
+  document.getElementById('geminiBadge').style.color=ok?'var(--green)':'var(--red)';
+}
+
+function toggleShowKey(){
+  const inp=document.getElementById('apiKeyInput');
+  inp.type=inp.type==='password'?'text':'password';
+  document.getElementById('showKeyBtn').textContent=inp.type==='password'?'👁':'🙈';
+}
+
+async function loadDemo(){
+  showToast('جاري تشغيل Demo...','info');
+  log('DEMO','act','Loading demo!');
+  const fc=document.createElement('canvas');
+  fc.width=900;fc.height=600;
+  const ctx=fc.getContext('2d');
+  ctx.fillStyle='#f0f4f8';ctx.fillRect(0,0,900,600);
+  ctx.fillStyle='#1a73e8';ctx.fillRect(0,0,900,56);
+  ctx.fillStyle='#fff';ctx.font='bold 18px Arial';ctx.fillText('🤖 Demo App',20,36);
+  ctx.font='14px Arial';ctx.fillText('Home',200,36);ctx.fillText('About',280,36);ctx.fillText('Contact',360,36);
+  ctx.fillStyle='#fff';ctx.fillRect(800,16,80,28);
+  ctx.fillStyle='#1a73e8';ctx.font='bold 13px Arial';ctx.fillText('Login',822,34);
+  ctx.fillStyle='#fff';ctx.fillRect(50,80,800,200);
+  ctx.fillStyle='#1a1a2e';ctx.font='bold 28px Arial';ctx.fillText('Welcome to Gemini Demo',80,140);
+  ctx.fillStyle='#666';ctx.font='16px Arial';ctx.fillText('Sample UI page for Gemini Live Agent.',80,180);
+  ctx.fillStyle='#1a73e8';ctx.fillRect(80,210,140,44);
+  ctx.fillStyle='#fff';ctx.font='bold 15px Arial';ctx.fillText('Get Started',104,238);
+  ctx.fillStyle='#34a853';ctx.fillRect(240,210,120,44);ctx.fillText('Learn More',262,238);
+  ctx.fillStyle='#fff';ctx.fillRect(50,300,380,250);
+  ctx.fillStyle='#1a1a2e';ctx.font='bold 18px Arial';ctx.fillText('Contact Us',80,340);
+  ctx.strokeStyle='#ccc';ctx.lineWidth=1;
+  ctx.strokeRect(80,358,300,36);ctx.fillStyle='#999';ctx.font='13px Arial';ctx.fillText('Your Name',90,381);
+  ctx.strokeRect(80,408,300,36);ctx.fillText('Email Address',90,431);
+  ctx.strokeRect(80,458,300,60);ctx.fillText('Your Message...',90,480);
+  ctx.fillStyle='#ea4335';ctx.fillRect(80,530,120,36);
+  ctx.fillStyle='#fff';ctx.font='bold 14px Arial';ctx.fillText('Send Message',88,553);
+  ctx.fillStyle='#333';ctx.fillRect(0,560,900,40);
+  ctx.fillStyle='#aaa';ctx.font='12px Arial';ctx.fillText('© 2025 Demo App.',300,585);
+
+  capturedImageBase64=fc.toDataURL('image/jpeg',.9).split(',')[1];
+  const canvas=document.getElementById('cvs'),prev=document.getElementById('scprev');
+  canvas.width=prev.offsetWidth||300;canvas.height=prev.offsetHeight||110;
+  canvas.getContext('2d').drawImage(fc,0,0,canvas.width,canvas.height);
+  document.getElementById('scprev').style.display='block';
+  document.getElementById('uploadArea').style.display='none';
+  document.getElementById('sclbl').textContent='✅ Demo loaded!';
+  scanCount++;document.getElementById('mS').textContent=scanCount;
+  setPipe(0,'done');
+  document.getElementById('taskIn').value='حلل الـ UI دي واذكر كل العناصر وقيّم تجربة المستخدم.';
+
+  // OFFLINE DEMO — no API key needed
+  const d={summary:"صفحة ويب تحتوي على navbar، قسم hero، فورم تواصل، وكاردات.",page_type:"Landing Page",ui_elements:{buttons:4,inputs:3,text_elements:12,links:5},detected_elements:[{type:"button",label:"Get Started",position:"top"},{type:"button",label:"Learn More",position:"top"},{type:"button",label:"Login",position:"top"},{type:"button",label:"Send Message",position:"bottom"},{type:"input",label:"Your Name",position:"center"},{type:"input",label:"Email",position:"center"}],recommended_actions:[{action:"click",target:"Get Started",reason:"الزرار الرئيسي"},{action:"type",target:"Email input",reason:"للتواصل"},{action:"scroll",target:"Contact",reason:"فورم التواصل"}],extracted_text:"Welcome to Gemini Demo | Home | About | Contact | Login | Get Started | Learn More | Send Message",confidence:0.96,ux_score:82,analysis_notes:"⚡ OFFLINE DEMO MODE",accessibility_notes:"تحتاج alt text للصور"};
+  lastJSON=d;updateDetection(d);showJSON(d);
+  let display='📋 الملخص:\n'+d.summary+'\n\n🏷️ نوع الصفحة: '+d.page_type+'\n\n⭐ UX Score: '+d.ux_score+'/100\n\n';
+  display+='🔍 العناصر:\n  • أزرار: 4\n  • حقول: 3\n  • نصوص: 12\n  • روابط: 5\n\n';
+  display+='⚡ الإجراءات:\n';
+  d.recommended_actions.forEach((a,i)=>{display+=`  ${i+1}. [${a.action}] ${a.target} — ${a.reason}\n`;});
+  display+='\n♿ Accessibility:\n'+d.accessibility_notes;
+  lastResult=display;
+  document.getElementById('resultText').textContent=display;
+  document.getElementById('resultPanel').classList.add('show');
+  setPipe(6,'done');setRst('✅ DEMO MODE');
+  document.getElementById('mT').textContent=++taskCount;
+  document.getElementById('mA').textContent='96%';document.getElementById('mL').textContent='0ms';
+  showToast('✅ Demo شغال بدون API Key! 🎉','ok',4000);
+  log('DEMO','ok','Offline demo complete!');
+  setTimeout(()=>document.getElementById('resultPanel').scrollIntoView({behavior:'smooth'}),300);
+}
+
+async function captureScreen(){
+  if(isMobile){document.getElementById('imgUpload').click();return;}
+  try{
+    log('CAP','info','Capturing...');setRst('📸 Capturing...');
+    document.getElementById('sclbl').textContent='⏳ اختار النافذة...';
+    const ms=await navigator.mediaDevices.getDisplayMedia({video:{width:{ideal:1920},height:{ideal:1080}}});
+    const video=document.createElement('video');video.srcObject=ms;
+    await new Promise(r=>{video.onloadedmetadata=r;});video.play();
+    await new Promise(r=>setTimeout(r,400));
+    const canvas=document.getElementById('cvs'),prev=document.getElementById('scprev');
+    canvas.width=prev.offsetWidth;canvas.height=prev.offsetHeight;
+    canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
+    const fc=document.createElement('canvas');fc.width=video.videoWidth;fc.height=video.videoHeight;
+    fc.getContext('2d').drawImage(video,0,0);
+    capturedImageBase64=fc.toDataURL('image/jpeg',.85).split(',')[1];
+    ms.getTracks().forEach(t=>t.stop());
+    document.getElementById('scanl').style.display='block';
+    setTimeout(()=>{document.getElementById('scanl').style.display='none';},2500);
+    document.getElementById('sclbl').textContent='✅ تم!';
+    scanCount++;document.getElementById('mS').textContent=scanCount;
+    setPipe(0,'done');showToast('تم التصوير!','ok');
+    log('CAP','ok',fc.width+'×'+fc.height);setRst('✅ Captured');return true;
+  }catch(e){
+    document.getElementById('sclbl').textContent='❌ فشل';
+    showToast('فشل: '+e.message,'err');log('CAP','err',e.message);return false;
+  }
+}
+
+function handleImageUpload(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.getElementById('cvs');canvas.width=300;canvas.height=150;
+      canvas.getContext('2d').drawImage(img,0,0,300,150);
+      document.getElementById('scprev').style.display='block';
+      document.getElementById('uploadArea').style.display='none';
+      document.getElementById('sclbl').textContent='✅ '+file.name;
+      capturedImageBase64=e.target.result.split(',')[1];
+      scanCount++;document.getElementById('mS').textContent=scanCount;
+      log('UPL','ok',file.name);showToast('تم رفع الصورة!','ok');setPipe(0,'done');
+    };img.src=e.target.result;
+  };reader.readAsDataURL(file);
+}
+
+async function startAgent(){
+  if(running){showToast('الـ Agent شغال!','warn');return;}
+  if(!GEMINI_API_KEY){showToast('أدخل API Key الأول!','err');document.getElementById('apiKeyInput').focus();return;}
+  if(!capturedImageBase64){showToast('التقط أو ارفع صورة!','warn');if(isMobile)document.getElementById('imgUpload').click();else captureScreen();return;}
+  const task=document.getElementById('taskIn').value.trim()||'حلل الشاشة';
+  running=true;taskCount++;document.getElementById('mT').textContent=taskCount;
+  document.getElementById('runBtn').disabled=true;setRst('🔄 Running...');
+  log('AGT','act','▶ '+task.substring(0,60));
+  try{
+    setPipe(0,'done');setProgress(15,'Sending...');setPipe(1,'active');
+    const prompt=`Analyze this screenshot. Task: "${task}". Return ONLY valid JSON:
+{"summary":"وصف","page_type":"نوع","ui_elements":{"buttons":0,"inputs":0,"text_elements":0,"links":0},"detected_elements":[{"type":"button","label":"text","position":"top"}],"recommended_actions":[{"action":"click","target":"el","reason":"why"}],"extracted_text":"texts","confidence":0.95,"ux_score":85,"analysis_notes":"notes","accessibility_notes":"notes"}`;
+    const start=Date.now();
+    const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:prompt},{inline_data:{mime_type:'image/jpeg',data:capturedImageBase64}}]}],generationConfig:{temperature:0.1,maxOutputTokens:2048}})});
+    if(!res.ok){const err=await res.json();const msg=err.error?.message||'HTTP '+res.status;if(res.status===400)throw new Error('❌ API Key غلط');if(res.status===403)throw new Error('❌ مش عنده صلاحية');if(res.status===429)throw new Error('❌ تجاوزت الـ quota');throw new Error(msg);}
+    const data=await res.json();const elapsed=Date.now()-start;
+    document.getElementById('mL').textContent=elapsed+'ms';
+    if(!data.candidates||!data.candidates[0])throw new Error('❌ مفيش رد');
+    const rawText=data.candidates[0].content.parts[0].text;
+    setProgress(65,'Parsing...');setPipe(2,'active');
+    let parsed=null;
+    try{let clean=rawText.trim().replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();const m=clean.match(/\{[\s\S]*\}/);if(m)clean=m[0];parsed=JSON.parse(clean);}
+    catch(e){parsed={summary:rawText.substring(0,500),page_type:'unknown',ui_elements:{buttons:0,inputs:0,text_elements:0,links:0},detected_elements:[],recommended_actions:[],extracted_text:rawText,confidence:0.7};}
+    lastJSON=parsed;setPipe(3,'active');setProgress(80,'Processing...');
+    updateDetection(parsed);showJSON(parsed);
+    let display='';
+    if(parsed.summary)display+='📋 الملخص:\n'+parsed.summary+'\n\n';
+    if(parsed.page_type)display+='🏷️ نوع: '+parsed.page_type+'\n\n';
+    if(parsed.ux_score)display+='⭐ UX Score: '+parsed.ux_score+'/100\n\n';
+    if(parsed.ui_elements){const ui=parsed.ui_elements;display+=`🔍 العناصر:\n  • أزرار: ${ui.buttons}\n  • حقول: ${ui.inputs}\n  • نصوص: ${ui.text_elements}\n  • روابط: ${ui.links}\n\n`;}
+    if(parsed.detected_elements?.length){display+='📌 العناصر:\n';parsed.detected_elements.slice(0,8).forEach(el=>{display+=`  • [${el.type}] ${el.label} (${el.position})\n`;});display+='\n';}
+    if(parsed.extracted_text)display+='📝 النصوص:\n'+parsed.extracted_text.substring(0,300)+'\n\n';
+    if(parsed.recommended_actions?.length){display+='⚡ الإجراءات:\n';parsed.recommended_actions.forEach((a,i)=>{display+=`  ${i+1}. [${a.action}] ${a.target} — ${a.reason}\n`;});}
+    if(parsed.accessibility_notes)display+='\n♿ Accessibility:\n'+parsed.accessibility_notes;
+    document.getElementById('resultText').textContent=display||JSON.stringify(parsed,null,2);
+    lastResult=display;document.getElementById('resultPanel').classList.add('show');
+    setPipe(5,'active');setProgress(92,'Voice...');
+    if(voiceEnabled&&parsed.summary)speak(parsed.summary.substring(0,200));
+    if(document.getElementById('jsonToggle').classList.contains('on'))exportJSON();
+    setPipe(6,'done');setProgress(100,'✅ Done!');
+    setRst('✅ Done — '+elapsed+'ms');
+    showToast('اتم بنجاح في '+elapsed+'ms!','ok');
+    log('AGT','ok','✅ Complete in '+elapsed+'ms');
+    setTimeout(()=>document.getElementById('resultPanel').scrollIntoView({behavior:'smooth'}),300);
+  }catch(e){
+    setPipe(1,'error');setRst('❌ Error');
+    document.getElementById('pgwrap').style.display='none';
+    showToast(e.message,'err',6000);log('AGT','err',e.message);
+    if(e.message.includes('Key')||e.message.includes('403')||e.message.includes('400')){setApiStatus('err',e.message);updateApiUI(false);}
+  }finally{running=false;document.getElementById('runBtn').disabled=false;}
+}
+
+function stopAgent(){running=false;document.getElementById('runBtn').disabled=false;document.getElementById('pgwrap').style.display='none';setRst('⏹ Stopped');showToast('تم الإيقاف','warn');}
+
+function clearAll(){
+  capturedImageBase64=null;lastResult='';lastJSON=null;
+  document.getElementById('cvs').getContext('2d').clearRect(0,0,9999,9999);
+  document.getElementById('sclbl').textContent=isMobile?'📱 ارفع صورة':'🖥️ اضغط لالتقاط الشاشة';
+  document.getElementById('resultPanel').classList.remove('show');
+  ['db','di2','dt','dl'].forEach(id=>document.getElementById(id).classList.remove('hit'));
+  ['dbc','dic','dtc','dlc'].forEach(id=>document.getElementById(id).textContent='—');
+  document.getElementById('mA').textContent='—';document.getElementById('mL').textContent='—';
+  document.getElementById('jv').innerHTML='<span style="color:rgba(200,230,240,.2)">// Waiting for Gemini...</span>';
+  for(let i=0;i<7;i++)document.getElementById('pn'+i).className='pnode';
+  setRst('✅ READY');
+  if(isMobile){document.getElementById('scprev').style.display='none';document.getElementById('uploadArea').style.display='block';}
+  showToast('تم المسح!','info');
+}
+
+function loadPreset(){
+  const p=['حلل الشاشة تحليل كامل','كم عدد الأزرار؟','استخرج كل النصوص','قيّم تجربة المستخدم','إيه نوع الصفحة دي؟'];
+  document.getElementById('taskIn').value=p[Math.floor(Math.random()*p.length)];
+  showToast('Preset loaded!','info');
+}
+
+function speakResult(){if(!lastResult){showToast('شغّل التحليل!','warn');return;}if(!voiceEnabled){voiceEnabled=true;document.getElementById('voiceToggle').classList.add('on');document.getElementById('fp-voice').classList.add('on');}speak(lastResult.substring(0,400));}
+function copyResult(){const text=lastResult||document.getElementById('resultText').textContent;if(!text)return;navigator.clipboard.writeText(text).then(()=>showToast('تم النسخ!','ok'));}
+
+function exportJSON(){
+  if(!lastJSON){showToast('شغّل التحليل!','warn');return;}
+  const blob=new Blob([JSON.stringify(lastJSON,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='gemini-'+Date.now()+'.json';a.click();URL.revokeObjectURL(url);
+  showToast('تم تحميل JSON!','ok');
+}
+
+function generatePDF(){
+  if(!lastResult){showToast('شغّل التحليل!','warn');return;}
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>Gemini Report</title>
+<style>body{font-family:Arial;background:#020408;color:#c8e6f0;padding:30px;}h1{color:#00f5ff;border-bottom:2px solid #00f5ff;padding-bottom:10px;}.meta{color:rgba(200,230,240,.5);font-size:11px;margin-bottom:20px;}.box{background:rgba(0,18,36,.8);border:1px solid rgba(0,245,255,.2);border-radius:8px;padding:14px;margin:12px 0;}pre{white-space:pre-wrap;font-size:12px;line-height:1.9;color:#c8e6f0;}@media print{body{background:#fff;color:#000;}h1{color:#0066cc;}.box{background:#f5f5f5;border-color:#ccc;}pre{color:#000;}}</style>
+</head><body><h1>🤖 Gemini Live Agent v5</h1>
+<div class="meta">📅 ${new Date().toLocaleString('ar-EG')} | Gemini 1.5 Flash</div>
+<div class="box"><pre>${lastResult.replace(/</g,'&lt;')}</pre></div>
+${lastJSON?`<div class="box"><pre style="font-size:10px;color:#39ff14;">${JSON.stringify(lastJSON,null,2).replace(/</g,'&lt;')}</pre></div>`:''}
+<script>setTimeout(()=>window.print(),500);<\/script></body></html>`);
+  win.document.close();showToast('PDF opened!','ok');
+}
+
+function exportComparePDF(){const c=document.getElementById('cresult').innerText;if(!c||c.includes('التقط'))return;lastResult='Compare\n\n'+c;generatePDF();}
+
+function toggleVoice(){
+  voiceEnabled=!voiceEnabled;
+  const tog=document.getElementById('voiceToggle'),fp=document.getElementById('fp-voice'),wave=document.getElementById('vwave');
+  if(voiceEnabled){wave.classList.remove('off');document.getElementById('voicePill').textContent='VOICE ON 🔊';document.getElementById('voiceDot').className='dot g';fp.classList.add('on');tog.classList.add('on');log('VOI','ok','Voice on');setTimeout(()=>speak('مرحباً! جاهز!'),200);}
+  else{wave.classList.add('off');document.getElementById('voicePill').textContent='VOICE OFF';document.getElementById('voiceDot').className='dot p';fp.classList.remove('on');tog.classList.remove('on');if(window.speechSynthesis)window.speechSynthesis.cancel();}
+}
+
+function speak(text){
+  if(!voiceEnabled||!window.speechSynthesis)return;
+  document.getElementById('vtxt').textContent='🔊 '+text.substring(0,50)+'...';
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);u.lang='ar-EG';u.rate=0.9;u.pitch=1.0;u.volume=1.0;
+  const voices=window.speechSynthesis.getVoices();
+  const ar=voices.find(v=>v.lang.startsWith('ar')),en=voices.find(v=>v.lang.startsWith('en'));
+  if(ar)u.voice=ar;else if(en)u.voice=en;
+  u.onstart=()=>document.getElementById('vwave').classList.remove('off');
+  u.onend=()=>{document.getElementById('vwave').classList.add('off');document.getElementById('vtxt').textContent=text.substring(0,60);};
+  u.onerror=()=>document.getElementById('vwave').classList.add('off');
+  window.speechSynthesis.speak(u);
+}
+
+function toggleCompare(){
+  compareEnabled=!compareEnabled;
+  const panel=document.getElementById('comparePanel'),fp=document.getElementById('fp-cmp');
+  panel.classList.toggle('show',compareEnabled);fp.classList.toggle('on',compareEnabled);
+  if(compareEnabled){if(isMobile){['csc1','csc2'].forEach(id=>document.getElementById(id).style.display='none');['cup1','cup2'].forEach(id=>document.getElementById(id).style.display='block');}setTimeout(()=>panel.scrollIntoView({behavior:'smooth'}),200);}
+}
+
+async function captureCompare(num){
+  if(isMobile){document.getElementById('cimg'+num).click();return;}
+  try{
+    const ms=await navigator.mediaDevices.getDisplayMedia({video:{width:{ideal:1920}}});
+    const video=document.createElement('video');video.srcObject=ms;
+    await new Promise(r=>{video.onloadedmetadata=r;});video.play();await new Promise(r=>setTimeout(r,400));
+    const canvas=document.getElementById('cvs'+num),prev=document.getElementById('csc'+num);
+    canvas.width=prev.offsetWidth;canvas.height=prev.offsetHeight;
+    canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
+    const fc=document.createElement('canvas');fc.width=video.videoWidth;fc.height=video.videoHeight;fc.getContext('2d').drawImage(video,0,0);
+    if(num===1)compareImg1=fc.toDataURL('image/jpeg',.85).split(',')[1];else compareImg2=fc.toDataURL('image/jpeg',.85).split(',')[1];
+    ms.getTracks().forEach(t=>t.stop());document.getElementById('clbl'+num).textContent='✅ تم';
+  }catch(e){document.getElementById('clbl'+num).textContent='❌ فشل';}
+}
+
+function handleCompareUpload(event,num){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    const img=new Image();img.onload=()=>{
+      const canvas=document.getElementById('cvs'+num);canvas.width=200;canvas.height=100;
+      canvas.getContext('2d').drawImage(img,0,0,200,100);
+      document.getElementById('csc'+num).style.display='block';document.getElementById('cup'+num).style.display='none';
+      document.getElementById('clbl'+num).textContent='✅ تم';
+      if(num===1)compareImg1=e.target.result.split(',')[1];else compareImg2=e.target.result.split(',')[1];
+    };img.src=e.target.result;
+  };reader.readAsDataURL(file);
+}
+
+async function comparePages(){
+  if(!compareImg1||!compareImg2){showToast('محتاج صورتين!','warn');return;}
+  if(!GEMINI_API_KEY){showToast('أدخل API Key!','err');return;}
+  document.getElementById('cresult').innerHTML='<span style="color:var(--cyan)">⏳ جاري المقارنة...</span>';
+  try{
+    const prompt=`Compare screenshots. Return ONLY JSON:{"summary":"ملخص","differences":[{"category":"layout","description":"فرق","severity":"major"}],"page1_description":"وصف1","page2_description":"وصف2","recommendation":"توصية","score":{"page1":80,"page2":85},"winner":"page1"}`;
+    const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:prompt},{inline_data:{mime_type:'image/jpeg',data:compareImg1}},{inline_data:{mime_type:'image/jpeg',data:compareImg2}}]}],generationConfig:{temperature:0.1,maxOutputTokens:2048}})});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const data=await res.json();const raw=data.candidates[0].content.parts[0].text;
+    let parsed;try{const m=raw.trim().replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim().match(/\{[\s\S]*\}/);parsed=JSON.parse(m?m[0]:raw);}catch(e){parsed={summary:raw.substring(0,500)};}
+    let html='<strong style="color:var(--purple)">📊 نتيجة المقارنة</strong><br><br>';
+    if(parsed.summary)html+='<strong>الملخص:</strong> '+escH(parsed.summary)+'<br><br>';
+    if(parsed.winner)html+='<strong>🏆 الفائز:</strong> <span style="color:var(--gold)">'+escH(parsed.winner)+'</span><br><br>';
+    if(parsed.score)html+=`<strong>التقييم:</strong> ${parsed.score.page1}/100 | ${parsed.score.page2}/100<br><br>`;
+    if(parsed.differences?.length){html+='<strong>الاختلافات:</strong><br>';parsed.differences.forEach(d=>{html+=`• [${escH(d.severity||'?')}] ${escH(d.description)}<br>`;});}
+    if(parsed.recommendation)html+='<br><strong>✅ التوصية:</strong> '+escH(parsed.recommendation);
+    document.getElementById('cresult').innerHTML=html;
+    showToast('تمت المقارنة!','ok');
+  }catch(e){document.getElementById('cresult').innerHTML='<span style="color:var(--red)">❌ '+escH(e.message)+'</span>';}
+}
+
+function initSpeechRecognition(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR)return;
+  recognition=new SR();recognition.continuous=false;recognition.interimResults=true;recognition.lang='ar-EG';
+  recognition.onresult=(e)=>{let t='';for(let i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;document.getElementById('transcriptText').textContent=t;if(e.results[e.results.length-1].isFinal){document.getElementById('taskIn').value=t;document.getElementById('sendRecBtn').style.display='block';}};
+  recognition.onend=()=>{isRecording=false;document.getElementById('micIcon').classList.remove('recording');document.getElementById('micBars').classList.remove('active');document.getElementById('micStatus').textContent='انتهى ✅';document.getElementById('micStatus').classList.remove('recording');document.getElementById('startRecBtn').style.display='block';document.getElementById('stopRecBtn').style.display='none';};
+  recognition.onerror=(e)=>{isRecording=false;log('MIC','err',e.error);};
+}
+
+function toggleMic(){
+  micEnabled=!micEnabled;
+  const panel=document.getElementById('micPanel'),tog=document.getElementById('micToggle'),fp=document.getElementById('fp-mic');
+  panel.classList.toggle('show',micEnabled);tog.classList.toggle('on',micEnabled);fp.classList.toggle('on',micEnabled);
+  document.getElementById('micPill').textContent=micEnabled?'MIC ON 🎤':'MIC OFF';
+  if(micEnabled)setTimeout(()=>panel.scrollIntoView({behavior:'smooth'}),200);
+}
+
+function startRecording(){
+  if(!recognition){showToast('مش مدعوم — Chrome فقط','err');return;}
+  if(isRecording)return;
+  recognition.start();isRecording=true;
+  document.getElementById('micIcon').classList.add('recording');
+  document.getElementById('micBars').classList.add('active');
+  document.getElementById('micStatus').textContent='🔴 جاري التسجيل...';
+  document.getElementById('micStatus').classList.add('recording');
+  document.getElementById('startRecBtn').style.display='none';
+  document.getElementById('stopRecBtn').style.display='block';
+  document.getElementById('sendRecBtn').style.display='none';
+  document.getElementById('transcriptText').textContent='🎤 بسمعك...';
+}
+
+function stopRecording(){if(recognition&&isRecording)recognition.stop();}
+function runFromVoice(){const text=document.getElementById('transcriptText').textContent;if(text&&text!=='—')document.getElementById('taskIn').value=text;startAgent();}
+function useExample(el){document.getElementById('taskIn').value=el.textContent;document.getElementById('transcriptText').textContent=el.textContent;document.getElementById('sendRecBtn').style.display='block';}
+
+if(window.speechSynthesis){window.speechSynthesis.getVoices();window.speechSynthesis.onvoiceschanged=()=>{const v=window.speechSynthesis.getVoices();const ar=v.find(x=>x.lang.startsWith('ar'));log('VOI','info',ar?'Arabic: '+ar.name:'No Arabic voice');};}</script>
+</body>
+</html>
